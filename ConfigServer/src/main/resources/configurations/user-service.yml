@@ -1,0 +1,41 @@
+spring:
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    username: quiksy
+#    url: jdbc:mysql://localhost:3306/userdb
+#    password: quiksy
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#    show-sql: true
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password: ''
+    initialization-mode: always
+  h2:
+    console:
+      enabled: true
+  elasticsearch:
+    uris: http://localhost:9200
+    username: quiksy
+    password: quiksy
+  amqp:
+    deserialization:
+      trust:
+        all: true
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: quiksy
+    password: quiksy
+
+application:
+  config:
+    redis:
+      host: localhost
+      port: 6379
+
+server:
+  port: 8001

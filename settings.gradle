@@ -1,0 +1,12 @@
+rootProject.name = 'Quiksy'
+include 'AuthMicroservice'
+include 'UserMicroservice'
+include 'ProductMicroservice'
+include 'OrderMicroservice'
+include 'NotificationMicroservice'
+include 'PaymentMicroservice'
+include 'ConfigServer'
+include 'EurekaServer'
+include 'GatewayMicroservice'
+include 'ElasticsearchMicroservice'
+

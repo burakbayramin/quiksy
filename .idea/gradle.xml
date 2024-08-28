@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleMigrationSettings" migrationVersion="1" />
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="gradleHome" value="" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/AuthMicroservice" />
+            <option value="$PROJECT_DIR$/ConfigServer" />
+            <option value="$PROJECT_DIR$/ElasticsearchMicroservice" />
+            <option value="$PROJECT_DIR$/EurekaServer" />
+            <option value="$PROJECT_DIR$/GatewayMicroservice" />
+            <option value="$PROJECT_DIR$/NotificationMicroservice" />
+            <option value="$PROJECT_DIR$/OrderMicroservice" />
+            <option value="$PROJECT_DIR$/PaymentMicroservice" />
+            <option value="$PROJECT_DIR$/ProductMicroservice" />
+            <option value="$PROJECT_DIR$/UserMicroservice" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>

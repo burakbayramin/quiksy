@@ -1,0 +1,15 @@
+dependencies {
+    implementation libs.springBootStarterWeb
+
+    implementation libs.springBootDataJpa
+    implementation libs.springDataElasticsearch
+    implementation libs.mySQL
+    implementation libs.springBootValidation
+    implementation libs.springCloudConfigClient
+    implementation libs.springCloudEurekaClient
+    implementation libs.lombok
+    annotationProcessor libs.lombok
+    implementation libs.springBootAmqp
+    implementation libs.springBootDataRedis
+    implementation libs.jwt
+}

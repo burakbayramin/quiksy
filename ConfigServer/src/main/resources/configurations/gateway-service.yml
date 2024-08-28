@@ -1,0 +1,248 @@
+spring:
+  cloud:
+    gateway:
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedHeaders: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+      discovery:
+        locator:
+          enabled: true
+          lowerCaseServiceId: true
+      httpclient:
+        connect-timeout: 1000
+        response-timeout: 20s
+      routes:
+        - id: auth-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+              - Path=/auth/**
+          filters:
+            - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+            - name: userServiceCircuitBreaker
+              args:
+                fallbackUri: forward:/fallback/auth
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/v1/user/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: userServiceCircuitBreaker
+                fallbackUri: forward:/fallback
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY, GATEWAY_TIMEOUT
+                methods: GET, POST
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@ipKeyResolver}"
+                redis-rate-limiter.requestedTokens: 1
+        - id: order-service
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/api/v1/orders/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: orderServiceCircuitBreaker
+                fallbackUri: forward:/fallback
+            - name: Retry
+              args:
+                retries: 5
+                statuses: BAD_GATEWAY, GATEWAY_TIMEOUT
+                methods: GET, POST
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@ipKeyResolver}"
+                redis-rate-limiter.requestedTokens: 1
+        - id: order-line-service
+          uri: lb://ORDER-LINE-SERVICE
+          predicates:
+            - Path=/api/v1/order-lines/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: orderLineServiceCircuitBreaker
+                fallbackUri: forward:/fallback
+            - name: Retry
+              args:
+                retries: 4
+                statuses: BAD_GATEWAY, GATEWAY_TIMEOUT
+                methods: GET, POST
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@ipKeyResolver}"
+                redis-rate-limiter.requestedTokens: 1
+        - id: product-service
+          uri: lb://Product-SERVICE
+          predicates:
+            - Path=/api/v1/products/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: productServiceCircuitBreaker
+                fallbackUri: forward:/fallback
+            - name: Retry
+              args:
+                retries: 2
+                statuses: BAD_GATEWAY, GATEWAY_TIMEOUT
+                methods: GET, POST
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@ipKeyResolver}"
+                redis-rate-limiter.requestedTokens: 1
+        - id: payment-service
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+            - Path=/api/v1/payments/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: paymentServiceCircuitBreaker
+                fallbackUri: forward:/fallback
+            - name: Retry
+              args:
+                retries: 6
+                statuses: BAD_GATEWAY, GATEWAY_TIMEOUT
+                methods: GET, POST
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@ipKeyResolver}"
+                redis-rate-limiter.requestedTokens: 1
+
+  resilience4j:
+    circuitbreaker:
+      instances:
+        userServiceCircuitBreaker:
+          registerHealthIndicator: true
+          slidingWindowSize: 100
+          permittedNumberOfCallsInHalfOpenState: 10
+          waitDurationInOpenState: 10000
+          failureRateThreshold: 50
+        orderServiceCircuitBreaker:
+          registerHealthIndicator: true
+          slidingWindowSize: 200
+          permittedNumberOfCallsInHalfOpenState: 20
+          waitDurationInOpenState: 15000
+          failureRateThreshold: 60
+        orderLineServiceCircuitBreaker:
+          registerHealthIndicator: true
+          slidingWindowSize: 150
+          permittedNumberOfCallsInHalfOpenState: 15
+          waitDurationInOpenState: 12000
+          failureRateThreshold: 55
+        productServiceCircuitBreaker:
+          registerHealthIndicator: true
+          slidingWindowSize: 80
+          permittedNumberOfCallsInHalfOpenState: 8
+          waitDurationInOpenState: 9000
+          failureRateThreshold: 45
+        paymentServiceCircuitBreaker:
+          registerHealthIndicator: true
+          slidingWindowSize: 300
+          permittedNumberOfCallsInHalfOpenState: 25
+          waitDurationInOpenState: 20000
+          failureRateThreshold: 65
+      configs:
+        default:
+          failureRateThreshold: 50
+          waitDurationInOpenState: 5s
+          minimum-number-of-calls: 5
+          permittedNumberOfCallsInHalfOpenState: 3
+          automaticTransitionFromOpenToHalfOpenEnabled: true
+          slidingWindowType: COUNT_BASED
+          slidingWindowSize: 10
+          registerHealthIndicator: true
+    retry:
+      instances:
+        userServiceRetry:
+          maxAttempts: 3
+          waitDuration: 1000
+          retryExceptions:
+            - org.springframework.web.client.HttpServerErrorException
+            - java.io.IOException
+        orderServiceRetry:
+          maxAttempts: 5
+          waitDuration: 1500
+          retryExceptions:
+            - org.springframework.web.client.HttpServerErrorException
+            - java.io.IOException
+        orderLineServiceRetry:
+          maxAttempts: 4
+          waitDuration: 1200
+          retryExceptions:
+            - org.springframework.web.client.HttpServerErrorException
+            - java.io.IOException
+        productServiceRetry:
+          maxAttempts: 2
+          waitDuration: 800
+          retryExceptions:
+            - org.springframework.web.client.HttpServerErrorException
+            - java.io.IOException
+        paymentServiceRetry:
+          maxAttempts: 6
+          waitDuration: 2000
+          retryExceptions:
+            - org.springframework.web.client.HttpServerErrorException
+            - java.io.IOException
+      configs:
+        default:
+          wait-duration: 2s
+          max-attempts: 3
+    timelimiter:
+      configs:
+        default:
+          timeout-duration: 3s
+
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: '*'
+    metrics:
+      distribution:
+        percentiles-histogram:
+          http:
+            server:
+              requests: 'true'
+    health:
+      circuitbreakers:
+        enabled: 'true'
+    endpoint:
+      health:
+        show-details: always
+    observations:
+      key-values:
+        application: gateway-service
+    tracing:
+      sampling:
+        probability: '1.0'
+
+    data:
+      redis:
+        host: localhost
+        port: 6379
+        timeout: 1000ms
+
+  server:
+    port: 8222
